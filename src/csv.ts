@@ -26,8 +26,8 @@ export async function readCompaniesFromCsv(filePath: string): Promise<CompanyDat
 
   return records.map((record: any) => ({
     companyName: record['企業名'] || record['companyName'] || record['name'] || '',
-    homepageUrl: record['ホームページURL'] || record['homepageUrl'] || record['url'] || undefined,
-    contactEmail: record['お問い合わせメールアドレス'] || record['contactEmail'] || record['email'] || undefined,
+    homepageUrl: record['ホームページURL'] || record['URL'] || record['homepageUrl'] || record['url'] || undefined,
+    contactEmail: record['お問い合わせメールアドレス'] || record['メールアドレス'] || record['contactEmail'] || record['email'] || undefined,
   }));
 }
 

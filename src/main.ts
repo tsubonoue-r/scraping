@@ -3,7 +3,7 @@
  */
 
 import { readCompaniesFromCsv, writeCompaniesToCsv, CompanyData } from './csv.js';
-import { scrapeCompanyInfo } from './scraper.js';
+import { scrapeCompanyInfo, extractEmailFromWebsite } from './scraper.js';
 
 export async function runScraping(inputFile: string, outputFile: string): Promise<void> {
   console.log('🌸 Web Scraping Tool - 企業情報取得');
@@ -28,12 +28,38 @@ export async function runScraping(inputFile: string, outputFile: string): Promis
       console.log(`[${i + 1}/${companies.length}] Processing: ${company.companyName}`);
 
       try {
-        const info = await scrapeCompanyInfo(company.companyName);
+        let homepageUrl = company.homepageUrl;
+        let contactEmail = company.contactEmail;
+
+        // 既にURLがある場合は検索をスキップ
+        if (company.homepageUrl) {
+          console.log(`  ℹ️ Using existing URL: ${company.homepageUrl}`);
+
+          // メールアドレスがまだない場合のみ抽出
+          if (!company.contactEmail) {
+            console.log(`  🔍 Extracting email from: ${company.homepageUrl}`);
+            contactEmail = await extractEmailFromWebsite(company.homepageUrl);
+
+            if (contactEmail) {
+              console.log(`  ✓ Email found: ${contactEmail}`);
+            } else {
+              console.log(`  ⚠ Email not found`);
+            }
+          } else {
+            console.log(`  ℹ️ Using existing email: ${company.contactEmail}`);
+          }
+        } else {
+          // URLがない場合は企業名から検索
+          console.log(`  🔍 Searching for homepage...`);
+          const info = await scrapeCompanyInfo(company.companyName);
+          homepageUrl = info.homepageUrl;
+          contactEmail = info.contactEmail;
+        }
 
         results.push({
           companyName: company.companyName,
-          homepageUrl: info.homepageUrl || company.homepageUrl,
-          contactEmail: info.contactEmail || company.contactEmail,
+          homepageUrl: homepageUrl,
+          contactEmail: contactEmail,
         });
       } catch (error) {
         console.error(`  ❌ Error: ${error}`);
